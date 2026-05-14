@@ -1,13 +1,45 @@
-const express = require("express");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
-const session = require("express-session");
+require("dotenv").config();
+
+const express =
+  require("express");
+
+const multer =
+  require("multer");
+
+const session =
+  require("express-session");
+
+const cloudinary =
+  require("cloudinary").v2;
+
+const {
+  CloudinaryStorage
+} = require(
+  "multer-storage-cloudinary"
+);
 
 const app = express();
 
 
-// SESSION
+// CLOUDINARY CONFIG
+cloudinary.config({
+
+  cloud_name:
+    process.env.CLOUD_NAME,
+
+  api_key:
+    process.env.API_KEY,
+
+  api_secret:
+    process.env.API_SECRET
+});
+
+
+// MIDDLEWARE
+app.use(express.json());
+
+app.use(express.static("public"));
+
 app.use(session({
 
   secret: "mysecretkey",
@@ -18,159 +50,241 @@ app.use(session({
 }));
 
 
-// MIDDLEWARE
-app.use(express.static("public"));
+// AUTH FUNCTION
+function auth(
+  req,
+  res,
+  next
+) {
 
-app.use("/uploads",
-  express.static("uploads"));
-
-app.use(express.json());
-
-
-// LOGIN
-app.post("/login", (req, res) => {
-
-  const { password } = req.body;
-
-  if (password === "1234") {
-
-    req.session.loggedIn = true;
-
-    res.json({
-      success: true
-    });
-
-  } else {
-
-    res.json({
-      success: false
-    });
-  }
-});
-
-
-// CHECK AUTH
-app.get("/check-auth", (req, res) => {
-
-  res.json({
-    loggedIn:
-      req.session.loggedIn || false
-  });
-});
-
-
-// LOGOUT
-app.post("/logout", (req, res) => {
-
-  req.session.destroy();
-
-  res.json({
-    success: true
-  });
-});
-
-
-// AUTH MIDDLEWARE
-function auth(req, res, next) {
-
-  if (req.session.loggedIn) {
+  if (
+    req.session.loggedIn
+  ) {
 
     next();
 
   } else {
 
     res.status(401).json({
+
       error: "Unauthorized"
     });
   }
 }
 
 
-// STORAGE
-const storage = multer.diskStorage({
+// LOGIN
+app.post(
+  "/login",
+  (req, res) => {
 
-  destination: function (req, file, cb) {
+    const {
+      password
+    } = req.body;
 
-    cb(null, "uploads/");
-  },
+    if (
+      password === "1234"
+    ) {
 
-  filename: function (req, file, cb) {
+      req.session.loggedIn =
+        true;
 
-    cb(
-      null,
-      Date.now() +
-      path.extname(file.originalname)
-    );
+      res.json({
+        success: true
+      });
+
+    } else {
+
+      res.json({
+        success: false
+      });
+    }
   }
-});
+);
 
 
-const upload = multer({
-  storage: storage
-});
+// CHECK AUTH
+app.get(
+  "/check-auth",
+  (req, res) => {
+
+    res.json({
+
+      loggedIn:
+        req.session.loggedIn
+        || false
+    });
+  }
+);
 
 
-// UPLOAD
+// LOGOUT
+app.post(
+  "/logout",
+  (req, res) => {
+
+    req.session.destroy();
+
+    res.json({
+      success: true
+    });
+  }
+);
+
+
+// CLOUDINARY STORAGE
+const storage =
+  new CloudinaryStorage({
+
+    cloudinary:
+      cloudinary,
+
+    params: async (
+      req,
+      file
+    ) => ({
+
+      folder:
+        "private-gallery",
+
+      resource_type:
+        "auto"
+    })
+  });
+
+const upload =
+  multer({
+
+    storage
+  });
+
+
+// UPLOAD ROUTE
 app.post(
   "/upload",
   auth,
   upload.single("file"),
+
   (req, res) => {
 
     res.json({
-      message: "File uploaded"
+
+      success: true
     });
   }
 );
 
 
 // GET FILES
-app.get("/files", auth, (req, res) => {
+app.get(
+  "/files",
+  auth,
 
-  fs.readdir("./uploads", (err, files) => {
+  async (
+    req,
+    res
+  ) => {
 
-    if (err) {
+    try {
 
-      return res.status(500).json({
-        error: "Cannot read uploads folder"
+      const result =
+        await cloudinary.search
+        .expression(
+          "folder:private-gallery"
+        )
+        .sort_by(
+          "created_at",
+          "desc"
+        )
+        .max_results(100)
+        .execute();
+
+      const files =
+        result.resources.map(
+          file => ({
+
+            url:
+              file.secure_url,
+
+            type:
+              file.resource_type,
+
+            public_id:
+              file.public_id
+          })
+        );
+
+      res.json(files);
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+
+        error:
+          "Cannot fetch files"
       });
     }
-
-    res.json(files);
-  });
-});
+  }
+);
 
 
-// DELETE FILE
+// DELETE ROUTE
 app.delete(
-  "/delete/:name",
+  "/delete/:id",
   auth,
-  (req, res) => {
 
-    const filePath =
-      "./uploads/" + req.params.name;
+  async (
+    req,
+    res
+  ) => {
 
-    fs.unlink(filePath, (err) => {
+    try {
 
-      if (err) {
+      await cloudinary
+      .uploader
+      .destroy(
 
-        return res.status(500).json({
-          error: "Delete failed"
-        });
-      }
+        req.params.id,
+
+        {
+          resource_type:
+            "image"
+        }
+      );
 
       res.json({
-        message: "Deleted"
+        success: true
       });
-    });
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+
+        error:
+          "Delete failed"
+      });
+    }
   }
 );
 
 
 // SERVER
-app.listen(3000, () => {
+const PORT =
+  process.env.PORT
+  || 3000;
 
-  console.log(
-    "Server running on http://localhost:3000"
-  );
-});
+app.listen(
+  PORT,
+  "0.0.0.0",
+  () => {
+
+    console.log(
+
+      `Server running on port ${PORT}`
+    );
+  }
+);

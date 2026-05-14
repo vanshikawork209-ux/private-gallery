@@ -13,50 +13,155 @@ const modalImg =
 const closeModal =
   document.getElementById("closeModal");
 
+const logoutBtn =
+  document.getElementById("logoutBtn");
+
+const loginScreen =
+  document.getElementById("loginScreen");
+
+const passwordInput =
+  document.getElementById("passwordInput");
+
+
+// CHECK LOGIN
+async function checkAuth() {
+
+  const res =
+    await fetch("/check-auth");
+
+  const data =
+    await res.json();
+
+  if (data.loggedIn) {
+
+    loginScreen.style.display =
+      "none";
+
+    logoutBtn.style.display =
+      "block";
+
+    loadGallery();
+  }
+}
+
+checkAuth();
+
+
+// LOGIN
+async function login() {
+
+  const password =
+    passwordInput.value;
+
+  const res =
+    await fetch("/login", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type":
+          "application/json"
+      },
+
+      body: JSON.stringify({
+        password
+      })
+    });
+
+  const data =
+    await res.json();
+
+  if (data.success) {
+
+    loginScreen.style.display =
+      "none";
+
+    logoutBtn.style.display =
+      "block";
+
+    loadGallery();
+
+  } else {
+
+    alert("Wrong password");
+  }
+}
+
+
+// LOGOUT
+async function logout() {
+
+  await fetch("/logout", {
+    method: "POST"
+  });
+
+  location.reload();
+}
+
 
 // FILE INPUT
-fileInput.addEventListener("change", () => {
+fileInput.addEventListener(
+  "change",
+  () => {
 
-  uploadFile(fileInput.files[0]);
-});
-
-
-// DRAG OVER
-dropArea.addEventListener("dragover", (e) => {
-
-  e.preventDefault();
-
-  dropArea.classList.add("dragover");
-});
+    uploadFile(
+      fileInput.files[0]
+    );
+  }
+);
 
 
-// DRAG LEAVE
-dropArea.addEventListener("dragleave", () => {
+// DRAG EVENTS
+dropArea.addEventListener(
+  "dragover",
+  (e) => {
 
-  dropArea.classList.remove("dragover");
-});
+    e.preventDefault();
 
+    dropArea.classList.add(
+      "dragover"
+    );
+  }
+);
 
-// DROP
-dropArea.addEventListener("drop", (e) => {
+dropArea.addEventListener(
+  "dragleave",
+  () => {
 
-  e.preventDefault();
+    dropArea.classList.remove(
+      "dragover"
+    );
+  }
+);
 
-  dropArea.classList.remove("dragover");
+dropArea.addEventListener(
+  "drop",
+  (e) => {
 
-  const file =
-    e.dataTransfer.files[0];
+    e.preventDefault();
 
-  uploadFile(file);
-});
+    dropArea.classList.remove(
+      "dragover"
+    );
+
+    const file =
+      e.dataTransfer.files[0];
+
+    uploadFile(file);
+  }
+);
 
 
 // UPLOAD
 async function uploadFile(file) {
 
-  const formData = new FormData();
+  const formData =
+    new FormData();
 
-  formData.append("file", file);
+  formData.append(
+    "file",
+    file
+  );
 
   await fetch("/upload", {
 
@@ -79,14 +184,13 @@ async function loadGallery() {
     await res.json();
 
   const gallery =
-    document.getElementById("gallery");
+    document.getElementById(
+      "gallery"
+    );
 
   gallery.innerHTML = "";
 
   files.forEach(file => {
-
-    const ext =
-      file.split(".").pop().toLowerCase();
 
     const div =
       document.createElement("div");
@@ -97,7 +201,9 @@ async function loadGallery() {
 
     // DELETE BUTTON
     const deleteBtn =
-      document.createElement("button");
+      document.createElement(
+        "button"
+      );
 
     deleteBtn.innerText =
       "Delete";
@@ -109,7 +215,9 @@ async function loadGallery() {
       async () => {
 
       await fetch(
-        "/delete/" + file,
+        "/delete/" +
+        file.public_id,
+
         {
           method: "DELETE"
         }
@@ -123,15 +231,15 @@ async function loadGallery() {
 
     // IMAGE
     if (
-      ["jpg", "jpeg", "png", "gif", "webp"]
-      .includes(ext)
+      file.type === "image"
     ) {
 
       const img =
-        document.createElement("img");
+        document.createElement(
+          "img"
+        );
 
-      img.src =
-        "/uploads/" + file;
+      img.src = file.url;
 
       img.onclick = () => {
 
@@ -139,7 +247,7 @@ async function loadGallery() {
           "flex";
 
         modalImg.src =
-          img.src;
+          file.url;
       };
 
       div.appendChild(img);
@@ -148,15 +256,15 @@ async function loadGallery() {
 
     // VIDEO
     if (
-      ["mp4", "webm"]
-      .includes(ext)
+      file.type === "video"
     ) {
 
       const video =
-        document.createElement("video");
+        document.createElement(
+          "video"
+        );
 
-      video.src =
-        "/uploads/" + file;
+      video.src = file.url;
 
       video.controls = true;
 
@@ -171,82 +279,6 @@ async function loadGallery() {
 // CLOSE MODAL
 closeModal.onclick = () => {
 
-  modal.style.display = "none";
+  modal.style.display =
+    "none";
 };
-
-
-// LOGIN
-async function login() {
-
-  const password =
-    document.getElementById(
-      "passwordInput"
-    ).value;
-
-  const res =
-    await fetch("/login", {
-
-      method: "POST",
-
-      headers: {
-        "Content-Type":
-          "application/json"
-      },
-
-      body: JSON.stringify({
-        password
-      })
-    });
-
-  const data =
-    await res.json();
-
-  if (data.success) {
-
-    document.getElementById(
-      "loginScreen"
-    ).style.display = "none";
-
-    loadGallery();
-
-  } else {
-
-    alert("Wrong Password");
-  }
-}
-
-
-// CHECK AUTH
-async function checkAuth() {
-
-  const res =
-    await fetch("/check-auth");
-
-  const data =
-    await res.json();
-
-  if (data.loggedIn) {
-
-    document.getElementById(
-      "loginScreen"
-    ).style.display = "none";
-
-    loadGallery();
-  }
-}
-
-
-// LOGOUT
-async function logout() {
-
-  await fetch("/logout", {
-
-    method: "POST"
-  });
-
-  location.reload();
-}
-
-
-// START
-checkAuth();
