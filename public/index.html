@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>MyVault</title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
+    rel="stylesheet"
+  >
+
+</head>
+
+<body>
+
+
+  <!-- LOGIN SCREEN -->
+
+  <div id="loginScreen">
+
+    <div class="login-box">
+
+      <div class="login-logo">
+        🌸
+      </div>
+
+      <h2>MyVault</h2>
+
+      <p class="login-sub">
+        Tumhari private gallery
+      </p>
+
+      <div class="demo-box">
+
+        <strong>
+          Demo Password
+        </strong>
+
+        <br><br>
+
+        🔑 1234
+
+      </div>
+
+      <div class="input-group">
+
+        <label>
+          PASSWORD
+        </label>
+
+        <input
+          type="password"
+          id="passwordInput"
+          placeholder="••••••••"
+        >
+
+      </div>
+
+      <button
+        class="login-btn"
+        onclick="login()"
+      >
+        Gallery Kholo →
+      </button>
+
+      
+    </div>
+
+  </div>
+
+
+  <!-- MAIN APP -->
+
+  <div class="container">
+
+
+    <!-- TOP BAR -->
+
+    <div class="top-bar">
+
+      <div class="brand">
+
+        <h1>MyVault</h1>
+
+        
+
+      </div>
+
+      <button
+        id="logoutBtn"
+        onclick="logout()"
+      >
+        Logout
+      </button>
+
+    </div>
+
+
+    <!-- UPLOAD BOX -->
+
+    <div
+      class="upload-box"
+      id="dropArea"
+    >
+
+      <p>
+        📂 Drag & Drop Files Here
+      </p>
+
+      <input
+        type="file"
+        id="fileInput"
+        hidden
+      >
+
+      <button
+        class="upload-btn"
+        onclick="
+          document
+          .getElementById('fileInput')
+          .click()
+        "
+      >
+        Choose File
+      </button>
+
+    </div>
+
+
+    <!-- GALLERY -->
+
+    <div id="gallery"></div>
+
+  </div>
+
+
+  <!-- IMAGE MODAL -->
+
+  <div id="modal">
+
+    <span id="closeModal">
+      ✖
+    </span>
+
+    <img id="modalImg">
+
+  </div>
+
+
+  <script src="script.js"></script>
+
+</body>
+</html>
