@@ -32,7 +32,10 @@
     href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
     rel="stylesheet"
   >
-
+<link
+  rel="manifest"
+  href="manifest.json"
+/>
 </head>
 
 <body>
@@ -49,10 +52,6 @@
       </div>
 
       <h2>MyVault</h2>
-
-      <p class="login-sub">
-        Tumhari private gallery
-      </p>
 
       <div class="demo-box">
 
@@ -84,19 +83,22 @@
         class="login-btn"
         onclick="login()"
       >
-        Gallery Kholo →
+        Open your vault →
       </button>
 
-      
     </div>
 
   </div>
 
 
+
   <!-- MAIN APP -->
 
-  <div class="container">
-
+  <div
+    class="container"
+    id="mainApp"
+    style="display:none;"
+  >
 
     <!-- TOP BAR -->
 
@@ -104,9 +106,11 @@
 
       <div class="brand">
 
-        <h1>MyVault</h1>
+        <h1>✨ My Vault</h1>
 
-        
+        <p class="subtitle">
+          Save your memories forever
+        </p>
 
       </div>
 
@@ -134,19 +138,7 @@
       <input
         type="file"
         id="fileInput"
-        hidden
       >
-
-      <button
-        class="upload-btn"
-        onclick="
-          document
-          .getElementById('fileInput')
-          .click()
-        "
-      >
-        Choose File
-      </button>
 
     </div>
 
@@ -156,6 +148,7 @@
     <div id="gallery"></div>
 
   </div>
+
 
 
   <!-- IMAGE MODAL -->
@@ -171,7 +164,56 @@
   </div>
 
 
+
+  <script>
+
+    // LOGIN
+
+    function login() {
+
+      const password =
+
+        document.getElementById(
+          "passwordInput"
+        ).value;
+
+      if (password === "1234") {
+
+        document.getElementById(
+          "loginScreen"
+        ).style.display = "none";
+
+        document.getElementById(
+          "mainApp"
+        ).style.display = "block";
+
+      } else {
+
+        alert(
+          "Wrong Password"
+        );
+      }
+    }
+
+
+    // LOGOUT
+
+    function logout() {
+
+      document.getElementById(
+        "loginScreen"
+      ).style.display = "flex";
+
+      document.getElementById(
+        "mainApp"
+      ).style.display = "none";
+    }
+
+  </script>
+
+
   <script src="script.js"></script>
 
 </body>
+
 </html>

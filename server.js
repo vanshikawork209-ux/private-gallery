@@ -6,9 +6,6 @@ const express =
 const multer =
   require("multer");
 
-const session =
-  require("express-session");
-
 const cloudinary =
   require("cloudinary").v2;
 
@@ -18,7 +15,11 @@ const {
   "multer-storage-cloudinary"
 );
 
-const app = express();
+const path =
+  require("path");
+
+const app =
+  express();
 
 
 // CLOUDINARY CONFIG
@@ -35,109 +36,11 @@ cloudinary.config({
 });
 
 
-// MIDDLEWARE
-app.use(express.json());
-
-app.use(express.static("public"));
-
-app.use(session({
-
-  secret: "mysecretkey",
-
-  resave: false,
-
-  saveUninitialized: true
-}));
-
-
-// AUTH FUNCTION
-function auth(
-  req,
-  res,
-  next
-) {
-
-  if (
-    req.session.loggedIn
-  ) {
-
-    next();
-
-  } else {
-
-    res.status(401).json({
-
-      error: "Unauthorized"
-    });
-  }
-}
-
-
-// LOGIN
-app.post(
-  "/login",
-  (req, res) => {
-
-    const {
-      password
-    } = req.body;
-
-    if (
-      password === "1234"
-    ) {
-
-      req.session.loggedIn =
-        true;
-
-      res.json({
-        success: true
-      });
-
-    } else {
-
-      res.json({
-        success: false
-      });
-    }
-  }
-);
-
-
-// CHECK AUTH
-app.get(
-  "/check-auth",
-  (req, res) => {
-
-    res.json({
-
-      loggedIn:
-        req.session.loggedIn
-        || false
-    });
-  }
-);
-
-
-// LOGOUT
-app.post(
-  "/logout",
-  (req, res) => {
-
-    req.session.destroy();
-
-    res.json({
-      success: true
-    });
-  }
-);
-
-
-// CLOUDINARY STORAGE
+// STORAGE
 const storage =
   new CloudinaryStorage({
 
-    cloudinary:
-      cloudinary,
+    cloudinary,
 
     params: async (
       req,
@@ -154,15 +57,35 @@ const storage =
 
 const upload =
   multer({
-
     storage
   });
 
 
-// UPLOAD ROUTE
+// MIDDLEWARE
+app.use(express.json());
+
+app.use(express.static("public"));
+
+
+// HOME
+app.get("/", (req, res) => {
+
+  res.sendFile(
+
+    path.join(
+      __dirname,
+      "public",
+      "index.html"
+    )
+  );
+});
+
+
+// UPLOAD
 app.post(
+
   "/upload",
-  auth,
+
   upload.single("file"),
 
   (req, res) => {
@@ -177,29 +100,32 @@ app.post(
 
 // GET FILES
 app.get(
-  "/files",
-  auth,
 
-  async (
-    req,
-    res
-  ) => {
+  "/files",
+
+  async (req, res) => {
 
     try {
 
       const result =
+
         await cloudinary.search
+
         .expression(
           "folder:private-gallery"
         )
+
         .sort_by(
           "created_at",
           "desc"
         )
+
         .max_results(100)
+
         .execute();
 
       const files =
+
         result.resources.map(
           file => ({
 
@@ -230,31 +156,38 @@ app.get(
 );
 
 
-// DELETE ROUTE
+// DELETE
 app.delete(
-  "/delete/:id",
-  auth,
 
-  async (
-    req,
-    res
-  ) => {
+  "/delete",
+
+  async (req, res) => {
 
     try {
+
+      const publicId =
+
+        req.query.public_id;
+
+      const resourceType =
+
+        req.query.type || "image";
+
 
       await cloudinary
       .uploader
       .destroy(
 
-        req.params.id,
+        publicId,
 
         {
           resource_type:
-            "image"
+            resourceType
         }
       );
 
       res.json({
+
         success: true
       });
 
@@ -270,16 +203,21 @@ app.delete(
     }
   }
 );
+    
+        
 
 
-// SERVER
+
+// START SERVER
 const PORT =
-  process.env.PORT
-  || 3000;
+  process.env.PORT || 3000;
 
 app.listen(
+
   PORT,
+
   "0.0.0.0",
+
   () => {
 
     console.log(
