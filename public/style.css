@@ -499,3 +499,123 @@ body{
 
   z-index: 10;
 }
+#loginScreen {
+
+  width: 100%;
+
+  min-height: 100vh;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+}
+.login-btn {
+
+  width: 100%;
+
+  padding: 16px;
+
+  font-size: 18px;
+
+  border-radius: 14px;
+
+  cursor: pointer;
+}
+#userInfo {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: 15px;
+}
+
+
+#userPhoto {
+
+  width: 55px;
+
+  height: 55px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+
+  border: 3px solid #d8a7b1;
+}
+
+
+#userName {
+
+  font-size: 16px;
+
+  margin: 0;
+}
+
+
+#userEmail {
+
+  font-size: 13px;
+
+  opacity: 0.7;
+
+  margin: 0;
+}
+#userInfo {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: 15px;
+}
+
+
+#userPhoto {
+
+  width: 55px;
+
+  height: 55px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+
+  border: 3px solid #d8a7b1;
+}
+
+
+#userName {
+
+  margin: 0;
+
+  font-size: 16px;
+}
+
+
+#userEmail {
+
+  margin: 0;
+
+  font-size: 13px;
+
+  opacity: 0.7;
+}
+#folderSelect {
+
+  width: 100%;
+
+  padding: 14px;
+
+  border-radius: 12px;
+
+  margin-bottom: 20px;
+
+  font-size: 16px;
+}

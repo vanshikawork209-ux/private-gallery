@@ -1,11 +1,29 @@
+import {
+
+  getAuth
+
+} from
+
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+
+const auth =
+  getAuth();
+
+
 const fileInput =
-  document.getElementById("fileInput");
+  document.getElementById(
+    "fileInput"
+  );
 
 const gallery =
-  document.getElementById("gallery");
+  document.getElementById(
+    "gallery"
+  );
 
 
 // FILE SELECT
+
 fileInput.addEventListener(
 
   "change",
@@ -24,22 +42,66 @@ fileInput.addEventListener(
 
 
 // UPLOAD FUNCTION
+
 async function uploadFile(file) {
 
   const formData =
     new FormData();
+
+
+  // FILE
 
   formData.append(
     "file",
     file
   );
 
+
+  // USER ID
+
+  formData.append(
+
+    "userId",
+
+    localStorage.getItem(
+      "userId"
+    )
+  );
+
+
+  // FOLDER
+
+  formData.append(
+
+    "folder",
+
+    document.getElementById(
+      "folderSelect"
+    ).value
+  );
+
+
   try {
+
+    // FIREBASE TOKEN
+
+    const token =
+
+      await auth.currentUser
+      .getIdToken();
+
 
     const response =
       await fetch("/upload", {
 
         method: "POST",
+
+        headers: {
+
+          Authorization:
+
+`Bearer ${token}`
+        },
 
         body: formData
       });
@@ -62,12 +124,46 @@ async function uploadFile(file) {
 
 
 // LOAD GALLERY
+
 async function loadGallery() {
 
   try {
 
+    // FIREBASE TOKEN
+
+    const token =
+
+      await auth.currentUser
+      .getIdToken();
+
+
     const res =
-      await fetch("/files");
+      await fetch(
+
+        "/files?userId=" +
+
+        localStorage.getItem(
+          "userId"
+        )
+
+        +
+
+        "&folder=" +
+
+        document.getElementById(
+          "folderSelect"
+        ).value,
+
+        {
+
+          headers: {
+
+            Authorization:
+
+`Bearer ${token}`
+          }
+        }
+      );
 
     const files =
       await res.json();
@@ -84,53 +180,79 @@ async function loadGallery() {
 
 
       // DELETE BUTTON
+
       const deleteBtn =
-  document.createElement("button");
+        document.createElement(
+          "button"
+        );
 
-deleteBtn.innerText =
-  "Delete";
+      deleteBtn.innerText =
+        "Delete";
 
-deleteBtn.className =
-  "delete-btn";
+      deleteBtn.className =
+        "delete-btn";
 
-deleteBtn.onclick =
-  async () => {
+      deleteBtn.onclick =
+        async () => {
 
-    try {
+          try {
 
-      await fetch(
+            // TOKEN
 
-  "/delete?public_id=" +
+            const token =
 
-  encodeURIComponent(
-    file.public_id
-  ) +
+              await auth.currentUser
+              .getIdToken();
 
-  "&type=" +
 
-  file.type,
+            await fetch(
 
-  {
-    method: "DELETE"
-  }
-);
+              "/delete?public_id=" +
 
-      loadGallery();
+              encodeURIComponent(
+                file.public_id
+              ) +
 
-    } catch (error) {
+              "&type=" +
 
-      console.log(error);
-    }
-  };
-div.appendChild(deleteBtn);
+              file.type,
+
+              {
+
+                method: "DELETE",
+
+                headers: {
+
+                  Authorization:
+
+`Bearer ${token}`
+                }
+              }
+            );
+
+            loadGallery();
+
+          } catch (error) {
+
+            console.log(error);
+          }
+        };
+
+      div.appendChild(
+        deleteBtn
+      );
+
 
       // IMAGE
+
       if (
         file.type === "image"
       ) {
 
         const img =
-          document.createElement("img");
+          document.createElement(
+            "img"
+          );
 
         img.src =
           file.url;
@@ -140,12 +262,15 @@ div.appendChild(deleteBtn);
 
 
       // VIDEO
+
       else if (
         file.type === "video"
       ) {
 
         const video =
-          document.createElement("video");
+          document.createElement(
+            "video"
+          );
 
         video.src =
           file.url;
@@ -169,5 +294,20 @@ div.appendChild(deleteBtn);
 }
 
 
+// FOLDER CHANGE
+
+document.getElementById(
+
+  "folderSelect"
+
+).addEventListener(
+
+  "change",
+
+  loadGallery
+);
+
+
 // INITIAL LOAD
+
 loadGallery();

@@ -1,5 +1,21 @@
 require("dotenv").config();
 
+const admin =
+  require("firebase-admin");
+
+const serviceAccount =
+  require(
+    "./serviceAccountKey.json"
+  );
+
+admin.initializeApp({
+
+  credential:
+    admin.credential.cert(
+      serviceAccount
+    )
+});
+
 const express =
   require("express");
 
@@ -23,6 +39,7 @@ const app =
 
 
 // CLOUDINARY CONFIG
+
 cloudinary.config({
 
   cloud_name:
@@ -36,7 +53,61 @@ cloudinary.config({
 });
 
 
+// FIREBASE VERIFY USER
+
+async function verifyUser(
+
+  req,
+  res,
+  next
+
+) {
+
+  try {
+
+    const token =
+
+      req.headers.authorization
+      ?.split("Bearer ")[1];
+
+
+    if (!token) {
+
+      return res.status(401)
+      .json({
+
+        error:
+          "No token"
+      });
+    }
+
+
+    const decodedToken =
+
+      await admin.auth()
+      .verifyIdToken(token);
+
+
+    req.user =
+      decodedToken;
+
+    next();
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(401).json({
+
+      error:
+        "Unauthorized"
+    });
+  }
+}
+
+
 // STORAGE
+
 const storage =
   new CloudinaryStorage({
 
@@ -48,7 +119,10 @@ const storage =
     ) => ({
 
       folder:
-        "private-gallery",
+
+`private-gallery/
+${req.body.userId}/
+${req.body.folder}`,
 
       resource_type:
         "auto"
@@ -62,12 +136,18 @@ const upload =
 
 
 // MIDDLEWARE
+
 app.use(express.json());
+
+app.use(express.urlencoded({
+  extended: true
+}));
 
 app.use(express.static("public"));
 
 
 // HOME
+
 app.get("/", (req, res) => {
 
   res.sendFile(
@@ -82,9 +162,12 @@ app.get("/", (req, res) => {
 
 
 // UPLOAD
+
 app.post(
 
   "/upload",
+
+  verifyUser,
 
   upload.single("file"),
 
@@ -99,20 +182,33 @@ app.post(
 
 
 // GET FILES
+
 app.get(
 
   "/files",
 
+  verifyUser,
+
   async (req, res) => {
 
     try {
+
+      const userId =
+        req.query.userId;
+
+      const folder =
+        req.query.folder ||
+        "travel";
+
 
       const result =
 
         await cloudinary.search
 
         .expression(
-          "folder:private-gallery"
+
+`folder:private-gallery/${userId}/${folder}`
+
         )
 
         .sort_by(
@@ -123,6 +219,7 @@ app.get(
         .max_results(100)
 
         .execute();
+
 
       const files =
 
@@ -157,21 +254,23 @@ app.get(
 
 
 // DELETE
+
 app.delete(
 
   "/delete",
+
+  verifyUser,
 
   async (req, res) => {
 
     try {
 
       const publicId =
-
         req.query.public_id;
 
       const resourceType =
-
-        req.query.type || "image";
+        req.query.type ||
+        "image";
 
 
       await cloudinary
@@ -203,12 +302,10 @@ app.delete(
     }
   }
 );
-    
-        
-
 
 
 // START SERVER
+
 const PORT =
   process.env.PORT || 3000;
 

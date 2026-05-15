@@ -32,10 +32,12 @@
     href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
     rel="stylesheet"
   >
-<link
-  rel="manifest"
-  href="manifest.json"
-/>
+
+  <link
+    rel="manifest"
+    href="manifest.json"
+  >
+
 </head>
 
 <body>
@@ -52,38 +54,18 @@
       </div>
 
       <h2>MyVault</h2>
+      <br>
 
-      <div class="demo-box">
-
-        <strong>
-          Demo Password
-        </strong>
-
-        <br><br>
-
-        🔑 1234
-
-      </div>
-
-      <div class="input-group">
-
-        <label>
-          PASSWORD
-        </label>
-
-        <input
-          type="password"
-          id="passwordInput"
-          placeholder="••••••••"
-        >
-
-      </div>
+      <p class="subtitle">
+        Your private cloud gallery
+      </p>
+      <br>
 
       <button
         class="login-btn"
-        onclick="login()"
+        onclick="googleLogin()"
       >
-        Open your vault →
+        Continue with Google →
       </button>
 
     </div>
@@ -104,15 +86,40 @@
 
     <div class="top-bar">
 
+
+      <!-- USER INFO -->
+
+      <div id="userInfo">
+
+        <img id="userPhoto">
+
+        <div>
+
+          <h3 id="userName"></h3>
+
+          <p id="userEmail"></p>
+
+        </div>
+
+      </div>
+
+
+      <!-- BRAND -->
+
       <div class="brand">
 
         <h1>✨ My Vault</h1>
+        <br>
 
         <p class="subtitle">
           Save your memories forever
         </p>
 
       </div>
+
+
+      
+        <!-- LOGOUT -->
 
       <button
         id="logoutBtn"
@@ -122,6 +129,25 @@
       </button>
 
     </div>
+<select id="folderSelect">
+
+  <option value="travel">
+    Travel
+  </option>
+
+  <option value="personal">
+    Personal
+  </option>
+
+  <option value="college">
+    College
+  </option>
+
+  <option value="secret">
+    Secret
+  </option>
+
+</select>
 
 
     <!-- UPLOAD BOX -->
@@ -141,6 +167,7 @@
       >
 
     </div>
+
 
 
     <!-- GALLERY -->
@@ -165,54 +192,21 @@
 
 
 
-  <script>
+  <!-- FIREBASE -->
 
-    // LOGIN
-
-    function login() {
-
-      const password =
-
-        document.getElementById(
-          "passwordInput"
-        ).value;
-
-      if (password === "1234") {
-
-        document.getElementById(
-          "loginScreen"
-        ).style.display = "none";
-
-        document.getElementById(
-          "mainApp"
-        ).style.display = "block";
-
-      } else {
-
-        alert(
-          "Wrong Password"
-        );
-      }
-    }
+  <script
+    type="module"
+    src="firebase.js"
+  ></script>
 
 
-    // LOGOUT
 
-    function logout() {
+  <!-- MAIN SCRIPT -->
 
-      document.getElementById(
-        "loginScreen"
-      ).style.display = "flex";
-
-      document.getElementById(
-        "mainApp"
-      ).style.display = "none";
-    }
-
-  </script>
-
-
-  <script src="script.js"></script>
+ <script
+  type="module"
+  src="script.js"
+></script>
 
 </body>
 
