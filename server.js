@@ -9,6 +9,9 @@ const multer =
 const cloudinary =
   require("cloudinary").v2;
 
+const admin =
+  require("firebase-admin");
+
 const {
   CloudinaryStorage
 } = require(
@@ -20,6 +23,27 @@ const path =
 
 const app =
   express();
+
+
+// FIREBASE ADMIN
+
+admin.initializeApp({
+
+  credential:
+    admin.credential.cert({
+
+      projectId:
+        process.env.FIREBASE_PROJECT_ID,
+
+      clientEmail:
+        process.env.FIREBASE_CLIENT_EMAIL,
+
+      privateKey:
+        process.env
+        .FIREBASE_PRIVATE_KEY
+        .replace(/\\n/g, "\n")
+    })
+});
 
 
 // CLOUDINARY CONFIG
@@ -35,6 +59,56 @@ cloudinary.config({
   api_secret:
     process.env.API_SECRET
 });
+
+
+// VERIFY USER
+
+async function verifyUser(
+
+  req,
+  res,
+  next
+
+) {
+
+  try {
+
+    const token =
+
+      req.headers.authorization
+      ?.split("Bearer ")[1];
+
+    if (!token) {
+
+      return res.status(401)
+      .json({
+
+        error:
+          "No token"
+      });
+    }
+
+    const decodedToken =
+
+      await admin.auth()
+      .verifyIdToken(token);
+
+    req.user =
+      decodedToken;
+
+    next();
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(401).json({
+
+      error:
+        "Unauthorized"
+    });
+  }
+}
 
 
 // STORAGE
@@ -98,6 +172,8 @@ app.post(
 
   "/upload",
 
+  verifyUser,
+
   upload.single("file"),
 
   (req, res) => {
@@ -116,6 +192,8 @@ app.get(
 
   "/files",
 
+  verifyUser,
+
   async (req, res) => {
 
     try {
@@ -126,7 +204,6 @@ app.get(
       const folder =
         req.query.folder ||
         "travel";
-
 
       const result =
 
@@ -146,7 +223,6 @@ app.get(
         .max_results(100)
 
         .execute();
-
 
       const files =
 
@@ -186,6 +262,8 @@ app.delete(
 
   "/delete",
 
+  verifyUser,
+
   async (req, res) => {
 
     try {
@@ -196,7 +274,6 @@ app.delete(
       const resourceType =
         req.query.type ||
         "image";
-
 
       await cloudinary
       .uploader
