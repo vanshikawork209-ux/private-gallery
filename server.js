@@ -1,21 +1,5 @@
 require("dotenv").config();
 
-const admin =
-  require("firebase-admin");
-
-const serviceAccount =
-  require(
-    "./serviceAccountKey.json"
-  );
-
-admin.initializeApp({
-
-  credential:
-    admin.credential.cert(
-      serviceAccount
-    )
-});
-
 const express =
   require("express");
 
@@ -51,59 +35,6 @@ cloudinary.config({
   api_secret:
     process.env.API_SECRET
 });
-
-
-// FIREBASE VERIFY USER
-
-async function verifyUser(
-
-  req,
-  res,
-  next
-
-) {
-
-  try {
-
-    const token =
-
-      req.headers.authorization
-      ?.split("Bearer ")[1];
-
-
-    if (!token) {
-
-      return res.status(401)
-      .json({
-
-        error:
-          "No token"
-      });
-    }
-
-
-    const decodedToken =
-
-      await admin.auth()
-      .verifyIdToken(token);
-
-
-    req.user =
-      decodedToken;
-
-    next();
-
-  } catch (error) {
-
-    console.log(error);
-
-    res.status(401).json({
-
-      error:
-        "Unauthorized"
-    });
-  }
-}
 
 
 // STORAGE
@@ -167,8 +98,6 @@ app.post(
 
   "/upload",
 
-  verifyUser,
-
   upload.single("file"),
 
   (req, res) => {
@@ -186,8 +115,6 @@ app.post(
 app.get(
 
   "/files",
-
-  verifyUser,
 
   async (req, res) => {
 
@@ -258,8 +185,6 @@ app.get(
 app.delete(
 
   "/delete",
-
-  verifyUser,
 
   async (req, res) => {
 
