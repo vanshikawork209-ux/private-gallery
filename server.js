@@ -112,26 +112,18 @@ async function verifyUser(
 
 
 // STORAGE
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
 
-const storage =
-  new CloudinaryStorage({
+  params: async (req, file) => {
+    return {
+      folder: `private-gallery/${req.body.userId || "unknown"}/${req.body.folder || "general"}`,
+      resource_type: "auto"
+    };
+  }
+});
 
-    cloudinary,
-
-    params: async (req, file) => ({
-
-      folder:
-        `private-gallery/${req.body.userId || "unknown"}/${req.body.folder || "general"}`,
-
-      resource_type:
-        "auto"
-    })
-  });
-
-const upload =
-  multer({
-    storage
-  });
+const upload = multer({ storage });
 
 // MIDDLEWARE
 
@@ -162,17 +154,15 @@ app.get("/", (req, res) => {
 // UPLOAD
 
 app.post(
-
   "/upload",
-
   verifyUser,
-
   upload.single("file"),
-
   (req, res) => {
- console.log(req.file);
-    res.json({
 
+    console.log("UPLOAD SUCCESS");
+    console.log(req.file);
+
+    res.json({
       success: true,
       file: req.file
     });
@@ -183,56 +173,32 @@ app.post(
 // GET FILES
 
 app.get(
-
   "/files",
-
   verifyUser,
-
   async (req, res) => {
 
     try {
 
-      const userId =
-        req.query.userId;
+      const userId = req.query.userId;
 
       const folder =
-        req.query.folder ||
-        "travel";
+        req.query.folder || "travel";
 
       const result =
-
         await cloudinary.search
-
-        .expression(
-
- `folder:private-gallery/${userId}/${folder}`
-
-        )
-
-        .sort_by(
-          "created_at",
-          "desc"
-        )
-
-        .max_results(100)
-
-        .execute();
+          .expression(
+            `folder:private-gallery/${userId}/${folder}`
+          )
+          .sort_by("created_at", "desc")
+          .max_results(100)
+          .execute();
 
       const files =
-
-        result.resources.map(
-          file => ({
-
-            url:
-              file.secure_url,
-
-            type:
-              file.resource_type,
-
-            public_id:
-              file.public_id
-          })
-        );
+        result.resources.map(file => ({
+          url: file.secure_url,
+          type: file.resource_type,
+          public_id: file.public_id
+        }));
 
       res.json(files);
 
@@ -241,9 +207,7 @@ app.get(
       console.log(err);
 
       res.status(500).json({
-
-        error:
-          "Cannot fetch files"
+        error: "Cannot fetch files"
       });
     }
   }
