@@ -118,16 +118,10 @@ const storage =
 
     cloudinary,
 
-    params: async (
-      req,
-      file
-    ) => ({
+    params: async (req, file) => ({
 
       folder:
-
-`private-gallery/
-${req.body.userId}/
-${req.body.folder}`,
+        `private-gallery/${req.body.userId || "unknown"}/${req.body.folder || "general"}`,
 
       resource_type:
         "auto"
@@ -138,7 +132,6 @@ const upload =
   multer({
     storage
   });
-
 
 // MIDDLEWARE
 
@@ -212,7 +205,7 @@ app.get(
 
         .expression(
 
-folder: `private-gallery/${req.body.userId || "unknown"}/${req.body.folder || "general"}`,
+ `folder:private-gallery/${userId}/${folder}`
 
         )
 
