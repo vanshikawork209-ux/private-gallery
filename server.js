@@ -177,7 +177,7 @@ app.post(
   upload.single("file"),
 
   (req, res) => {
-
+ console.log(req.file);
     res.json({
 
       success: true,
@@ -212,7 +212,7 @@ app.get(
 
         .expression(
 
-`folder:private-gallery/${userId}/${folder}`
+folder: `private-gallery/${req.body.userId || "unknown"}/${req.body.folder || "general"}`,
 
         )
 
