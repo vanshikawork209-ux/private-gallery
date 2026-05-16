@@ -112,19 +112,30 @@ async function verifyUser(
 
 
 // STORAGE
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+const storage =
+  new CloudinaryStorage({
 
-  params: async (req, file) => {
-    return {
-      folder: `private-gallery/${req.body.userId || "unknown"}/${req.body.folder || "general"}`,
-      resource_type: "auto"
-    };
-  }
-});
+    cloudinary,
 
-const upload = multer({ storage });
+    params: async (req, file) => {
 
+      console.log(req.body);
+
+      return {
+
+        folder:
+          "private-gallery/uploads",
+
+        resource_type:
+          "auto"
+      };
+    }
+  });
+
+const upload =
+  multer({
+    storage
+  });
 // MIDDLEWARE
 
 app.use(express.json());
@@ -187,7 +198,7 @@ app.get(
       const result =
         await cloudinary.search
           .expression(
-            `folder:private-gallery/${userId}/${folder}`
+            `folder:private-gallery/uploads`
           )
           .sort_by("created_at", "desc")
           .max_results(100)
