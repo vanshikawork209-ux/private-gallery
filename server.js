@@ -180,7 +180,8 @@ app.post(
 
     res.json({
 
-      success: true
+      success: true,
+      file: req.file
     });
   }
 );

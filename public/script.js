@@ -1,40 +1,28 @@
 import {
-
-  getAuth
-
+  getAuth,
+  onAuthStateChanged
 } from
-
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-
-const auth =
-  getAuth();
-
+const auth = getAuth();
 
 const fileInput =
-  document.getElementById(
-    "fileInput"
-  );
+  document.getElementById("fileInput");
 
 const gallery =
-  document.getElementById(
-    "gallery"
-  );
+  document.getElementById("gallery");
 
 
 // FILE SELECT
 
 fileInput.addEventListener(
-
   "change",
-
   () => {
 
     const file =
       fileInput.files[0];
 
     if (file) {
-
       uploadFile(file);
     }
   }
@@ -45,9 +33,17 @@ fileInput.addEventListener(
 
 async function uploadFile(file) {
 
+  // CHECK LOGIN
+
+  if (!auth.currentUser) {
+
+    alert("Please login first");
+
+    return;
+  }
+
   const formData =
     new FormData();
-
 
   // FILE
 
@@ -56,40 +52,29 @@ async function uploadFile(file) {
     file
   );
 
-
   // USER ID
 
   formData.append(
-
     "userId",
-
-    localStorage.getItem(
-      "userId"
-    )
+    localStorage.getItem("userId")
   );
-
 
   // FOLDER
 
   formData.append(
-
     "folder",
-
     document.getElementById(
       "folderSelect"
     ).value
   );
 
-
   try {
 
-    // FIREBASE TOKEN
+    // TOKEN
 
     const token =
-
       await auth.currentUser
       .getIdToken();
-
 
     const response =
       await fetch("/upload", {
@@ -97,10 +82,8 @@ async function uploadFile(file) {
         method: "POST",
 
         headers: {
-
           Authorization:
-
-`Bearer ${token}`
+            `Bearer ${token}`
         },
 
         body: formData
@@ -111,6 +94,10 @@ async function uploadFile(file) {
 
     console.log(data);
 
+    alert(JSON.stringify(data));
+
+    // RELOAD GALLERY
+
     loadGallery();
 
   } catch (error) {
@@ -119,6 +106,8 @@ async function uploadFile(file) {
       "Upload Error:",
       error
     );
+
+    alert("Upload failed");
   }
 }
 
@@ -129,13 +118,15 @@ async function loadGallery() {
 
   try {
 
-    // FIREBASE TOKEN
+    // LOGIN CHECK
+
+    if (!auth.currentUser) {
+      return;
+    }
 
     const token =
-
       await auth.currentUser
       .getIdToken();
-
 
     const res =
       await fetch(
@@ -159,14 +150,15 @@ async function loadGallery() {
           headers: {
 
             Authorization:
-
-`Bearer ${token}`
+              `Bearer ${token}`
           }
         }
       );
 
     const files =
       await res.json();
+
+    console.log(files);
 
     gallery.innerHTML = "";
 
@@ -178,13 +170,10 @@ async function loadGallery() {
       div.className =
         "gallery-item";
 
-
       // DELETE BUTTON
 
       const deleteBtn =
-        document.createElement(
-          "button"
-        );
+        document.createElement("button");
 
       deleteBtn.innerText =
         "Delete";
@@ -197,13 +186,9 @@ async function loadGallery() {
 
           try {
 
-            // TOKEN
-
             const token =
-
               await auth.currentUser
               .getIdToken();
-
 
             await fetch(
 
@@ -211,7 +196,9 @@ async function loadGallery() {
 
               encodeURIComponent(
                 file.public_id
-              ) +
+              )
+
+              +
 
               "&type=" +
 
@@ -224,8 +211,7 @@ async function loadGallery() {
                 headers: {
 
                   Authorization:
-
-`Bearer ${token}`
+                    `Bearer ${token}`
                 }
               }
             );
@@ -238,28 +224,19 @@ async function loadGallery() {
           }
         };
 
-      div.appendChild(
-        deleteBtn
-      );
-
+      div.appendChild(deleteBtn);
 
       // IMAGE
 
-      if (
-        file.type === "image"
-      ) {
+      if (file.type === "image") {
 
         const img =
-          document.createElement(
-            "img"
-          );
+          document.createElement("img");
 
-        img.src =
-          file.url;
+        img.src = file.url;
 
         div.appendChild(img);
       }
-
 
       // VIDEO
 
@@ -268,15 +245,12 @@ async function loadGallery() {
       ) {
 
         const video =
-          document.createElement(
-            "video"
-          );
+          document.createElement("video");
 
         video.src =
           file.url;
 
-        video.controls =
-          true;
+        video.controls = true;
 
         div.appendChild(video);
       }
@@ -297,17 +271,25 @@ async function loadGallery() {
 // FOLDER CHANGE
 
 document.getElementById(
-
   "folderSelect"
-
 ).addEventListener(
-
   "change",
-
   loadGallery
 );
 
 
-// INITIAL LOAD
+// WAIT FOR LOGIN
 
-loadGallery();
+onAuthStateChanged(auth, (user) => {
+
+  if (user) {
+
+    console.log("User logged in");
+
+    loadGallery();
+
+  } else {
+
+    console.log("No user");
+  }
+});
