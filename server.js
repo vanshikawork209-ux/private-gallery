@@ -122,7 +122,7 @@ const storage =
       return {
 
         folder:
-           `private-gallery/${req.user.uid}/${req.body.folder || "general"}`,
+          `private-gallery/${req.user.uid}/${req.body.folder || "general"}`,
 
         resource_type:
           "auto"
@@ -134,6 +134,8 @@ const upload =
   multer({
     storage
   });
+
+
 // MIDDLEWARE
 
 app.use(express.json());
@@ -185,7 +187,6 @@ app.post(
 
 
 // GET FILES
-
 app.get(
   "/files",
   verifyUser,
@@ -193,28 +194,39 @@ app.get(
 
     try {
 
-const userId = req.user.uid;
+      const userId =
+        req.user.uid;
 
       const folder =
-        req.query.folder || "travel";
+        req.query.folder ||
+        "general";
 
       const result =
         await cloudinary.search
-          
-            .expression(
-  `folder:private-gallery/${userId}/${folder}`
-
+          .expression(
+            `folder:private-gallery/${userId}/${folder}`
           )
-          .sort_by("created_at", "desc")
+          .sort_by(
+            "created_at",
+            "desc"
+          )
           .max_results(100)
           .execute();
 
       const files =
-        result.resources.map(file => ({
-          url: file.secure_url,
-          type: file.resource_type,
-          public_id: file.public_id
-        }));
+        result.resources.map(
+          file => ({
+
+            url:
+              file.secure_url,
+
+            type:
+              file.resource_type,
+
+            public_id:
+              file.public_id
+          })
+        );
 
       res.json(files);
 
@@ -223,12 +235,13 @@ const userId = req.user.uid;
       console.log(err);
 
       res.status(500).json({
-        error: "Cannot fetch files"
+
+        error:
+          "Cannot fetch files"
       });
     }
   }
 );
-
 
 // DELETE
 
