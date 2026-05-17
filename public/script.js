@@ -92,8 +92,7 @@ console.log(localStorage.getItem("userId"));
     const data =
       await response.json();
 
-    console.log(data);
-
+    
     
 
     // RELOAD GALLERY
@@ -158,7 +157,6 @@ async function loadGallery() {
     const files =
       await res.json();
 
-    console.log(files);
 
     gallery.innerHTML = "";
 

@@ -122,7 +122,7 @@ const storage =
       return {
 
         folder:
-          `private-gallery/${req.body.userId}/${req.body.folder}`,
+           `private-gallery/${req.user.uid}/${req.body.folder || "general"}`,
 
         resource_type:
           "auto"
@@ -193,7 +193,7 @@ app.get(
 
     try {
 
-      const userId = req.query.userId;
+const userId = req.user.uid;
 
       const folder =
         req.query.folder || "travel";
