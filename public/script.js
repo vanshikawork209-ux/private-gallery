@@ -37,10 +37,10 @@ console.log(localStorage.getItem("userId"));
 
   if (!auth.currentUser) {
 
-    alert("Please login first");
+  console.log("Please login first");
 
-    return;
-  }
+  return;
+}
 
   const formData =
     new FormData();

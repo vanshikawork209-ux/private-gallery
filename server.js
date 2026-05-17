@@ -119,16 +119,6 @@ const storage =
 
     params: async (req, file) => {
 
-      console.log(req.body);
-
-      return {
-const storage =
-  new CloudinaryStorage({
-
-    cloudinary,
-
-    params: async (req, file) => {
-
       return {
 
         folder:
@@ -144,18 +134,12 @@ const upload =
   multer({
     storage
   });
-        
-        resource_type:
-          "auto"
-      };
-    }
-  });
-
-const upload =
-  multer({
-    storage
-  });
 // MIDDLEWARE
+
+app.use(express.json());
+app.use(express.urlencoded({
+  extended: true
+}));
 
 app.use(express.json());
 
