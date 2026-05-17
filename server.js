@@ -40,8 +40,8 @@ admin.initializeApp({
 
       privateKey:
         process.env
-        .FIREBASE_PRIVATE_KEY
-        .replace(/\\n/g, "\n")
+          .FIREBASE_PRIVATE_KEY
+          .replace(/\\n/g, "\n")
     })
 });
 
@@ -64,34 +64,30 @@ cloudinary.config({
 // VERIFY USER
 
 async function verifyUser(
-
   req,
   res,
   next
-
 ) {
 
   try {
 
     const token =
-
       req.headers.authorization
-      ?.split("Bearer ")[1];
+        ?.split("Bearer ")[1];
 
     if (!token) {
 
       return res.status(401)
-      .json({
+        .json({
 
-        error:
-          "No token"
-      });
+          error:
+            "No token"
+        });
     }
 
     const decodedToken =
-
       await admin.auth()
-      .verifyIdToken(token);
+        .verifyIdToken(token);
 
     req.user =
       decodedToken;
@@ -112,12 +108,16 @@ async function verifyUser(
 
 
 // STORAGE
+
 const storage =
   new CloudinaryStorage({
 
     cloudinary,
 
-    params: async (req, file) => {
+    params: async (
+      req,
+      file
+    ) => {
 
       return {
 
@@ -137,11 +137,6 @@ const upload =
 
 
 // MIDDLEWARE
-
-app.use(express.json());
-app.use(express.urlencoded({
-  extended: true
-}));
 
 app.use(express.json());
 
@@ -170,16 +165,25 @@ app.get("/", (req, res) => {
 // UPLOAD
 
 app.post(
+
   "/upload",
+
   verifyUser,
+
   upload.single("file"),
+
   (req, res) => {
 
-    console.log("UPLOAD SUCCESS");
+    console.log(
+      "UPLOAD SUCCESS"
+    );
+
     console.log(req.file);
 
     res.json({
+
       success: true,
+
       file: req.file
     });
   }
@@ -187,9 +191,13 @@ app.post(
 
 
 // GET FILES
+
 app.get(
+
   "/files",
+
   verifyUser,
+
   async (req, res) => {
 
     try {
@@ -202,18 +210,24 @@ app.get(
         "general";
 
       const result =
+
         await cloudinary.search
+
           .expression(
-            `folder:private-gallery/${userId}/${folder}`
+            `folder="private-gallery/${userId}/${folder}"`
           )
+
           .sort_by(
             "created_at",
             "desc"
           )
+
           .max_results(100)
+
           .execute();
 
       const files =
+
         result.resources.map(
           file => ({
 
@@ -243,6 +257,7 @@ app.get(
   }
 );
 
+
 // DELETE
 
 app.delete(
@@ -263,16 +278,16 @@ app.delete(
         "image";
 
       await cloudinary
-      .uploader
-      .destroy(
+        .uploader
+        .destroy(
 
-        publicId,
+          publicId,
 
-        {
-          resource_type:
-            resourceType
-        }
-      );
+          {
+            resource_type:
+              resourceType
+          }
+        );
 
       res.json({
 
