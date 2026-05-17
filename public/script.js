@@ -17,14 +17,16 @@ const gallery =
 
 fileInput.addEventListener(
   "change",
-  () => {
+  async () => {
 
     const file =
       fileInput.files[0];
 
-    if (file) {
-      uploadFile(file);
-    }
+    if (!file) return;
+
+    await uploadFile(file);
+
+    fileInput.value = "";
   }
 );
 
@@ -32,15 +34,15 @@ fileInput.addEventListener(
 // UPLOAD FUNCTION
 
 async function uploadFile(file) {
-console.log(localStorage.getItem("userId"));
-  // CHECK LOGIN
+
+  // LOGIN CHECK
 
   if (!auth.currentUser) {
 
-  console.log("Please login first");
+    console.log("Please login first");
 
-  return;
-}
+    return;
+  }
 
   const formData =
     new FormData();
@@ -50,13 +52,6 @@ console.log(localStorage.getItem("userId"));
   formData.append(
     "file",
     file
-  );
-
-  // USER ID
-
-  formData.append(
-    "userId",
-    localStorage.getItem("userId")
   );
 
   // FOLDER
@@ -92,12 +87,18 @@ console.log(localStorage.getItem("userId"));
     const data =
       await response.json();
 
-    
-    
+    // ERROR CHECK
+
+    if (!response.ok) {
+
+      console.log(data);
+
+      return;
+    }
 
     // RELOAD GALLERY
 
-    loadGallery();
+    await loadGallery();
 
   } catch (error) {
 
@@ -105,8 +106,6 @@ console.log(localStorage.getItem("userId"));
       "Upload Error:",
       error
     );
-
-   
   }
 }
 
@@ -127,13 +126,15 @@ async function loadGallery() {
       await auth.currentUser
       .getIdToken();
 
+    const folder =
+      document.getElementById(
+        "folderSelect"
+      ).value;
+
     const res =
       await fetch(
 
-       "/files?folder=" +
-document.getElementById(
-  "folderSelect"
-).value,
+        `/files?folder=${folder}`,
 
         {
 
@@ -148,8 +149,17 @@ document.getElementById(
     const files =
       await res.json();
 
-
     gallery.innerHTML = "";
+
+    // NO FILES
+
+    if (!files.length) {
+
+      gallery.innerHTML =
+        "<p>No files uploaded yet.</p>";
+
+      return;
+    }
 
     files.forEach(file => {
 
@@ -205,7 +215,7 @@ document.getElementById(
               }
             );
 
-            loadGallery();
+            await loadGallery();
 
           } catch (error) {
 
@@ -222,7 +232,14 @@ document.getElementById(
         const img =
           document.createElement("img");
 
-        img.src = file.url;
+        img.src =
+          file.url;
+
+        img.style.width =
+          "200px";
+
+        img.style.borderRadius =
+          "10px";
 
         div.appendChild(img);
       }
@@ -239,7 +256,11 @@ document.getElementById(
         video.src =
           file.url;
 
-        video.controls = true;
+        video.controls =
+          true;
+
+        video.style.width =
+          "200px";
 
         div.appendChild(video);
       }
@@ -273,12 +294,10 @@ onAuthStateChanged(auth, (user) => {
 
   if (user) {
 
-    console.log("User logged in");
-
     loadGallery();
 
   } else {
 
-    console.log("No user");
+    gallery.innerHTML = "";
   }
 });
