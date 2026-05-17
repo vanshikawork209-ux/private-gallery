@@ -130,19 +130,10 @@ async function loadGallery() {
     const res =
       await fetch(
 
-        "/files?userId=" +
-
-        localStorage.getItem(
-          "userId"
-        )
-
-        +
-
-        "&folder=" +
-
-        document.getElementById(
-          "folderSelect"
-        ).value,
+       "/files?folder=" +
+document.getElementById(
+  "folderSelect"
+).value,
 
         {
 
