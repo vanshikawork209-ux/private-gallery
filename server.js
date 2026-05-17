@@ -122,10 +122,29 @@ const storage =
       console.log(req.body);
 
       return {
+const storage =
+  new CloudinaryStorage({
+
+    cloudinary,
+
+    params: async (req, file) => {
+
+      return {
 
         folder:
-          "private-gallery/uploads",
+          `private-gallery/${req.body.userId}/${req.body.folder}`,
 
+        resource_type:
+          "auto"
+      };
+    }
+  });
+
+const upload =
+  multer({
+    storage
+  });
+        
         resource_type:
           "auto"
       };
@@ -197,8 +216,10 @@ app.get(
 
       const result =
         await cloudinary.search
-          .expression(
-            `folder:private-gallery/uploads`
+          
+            .expression(
+  `folder:private-gallery/${userId}/${folder}`
+
           )
           .sort_by("created_at", "desc")
           .max_results(100)

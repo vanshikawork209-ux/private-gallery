@@ -32,7 +32,7 @@ fileInput.addEventListener(
 // UPLOAD FUNCTION
 
 async function uploadFile(file) {
-
+console.log(localStorage.getItem("userId"));
   // CHECK LOGIN
 
   if (!auth.currentUser) {
@@ -94,7 +94,7 @@ async function uploadFile(file) {
 
     console.log(data);
 
-    alert(JSON.stringify(data));
+    
 
     // RELOAD GALLERY
 
@@ -107,7 +107,7 @@ async function uploadFile(file) {
       error
     );
 
-    alert("Upload failed");
+   
   }
 }
 
