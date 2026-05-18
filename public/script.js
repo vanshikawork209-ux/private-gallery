@@ -179,50 +179,53 @@ async function loadGallery() {
 
       deleteBtn.className =
         "delete-btn";
+deleteBtn.onclick =
+  async () => {
 
-      deleteBtn.onclick =
-        async () => {
+    const confirmDelete =
+      confirm(
+        "Delete this file?"
+      );
 
-          try {
+    if (!confirmDelete)
+      return;
 
-            const token =
-              await auth.currentUser
-              .getIdToken();
+    try {
 
-            await fetch(
+      const token =
+        await auth.currentUser
+        .getIdToken();
 
-              "/delete?public_id=" +
+      const response =
+        await fetch(
 
-              encodeURIComponent(
-                file.public_id
-              )
+          `/delete?public_id=${encodeURIComponent(file.public_id)}&type=${file.type}`,
 
-              +
+          {
 
-              "&type=" +
+            method: "DELETE",
 
-              file.type,
+            headers: {
 
-              {
-
-                method: "DELETE",
-
-                headers: {
-
-                  Authorization:
-                    `Bearer ${token}`
-                }
-              }
-            );
-
-            await loadGallery();
-
-          } catch (error) {
-
-            console.log(error);
+              Authorization:
+                `Bearer ${token}`
+            }
           }
-        };
+        );
 
+      const data =
+        await response.json();
+
+      console.log(data);
+
+      await loadGallery();
+
+    } catch (error) {
+
+      console.log(error);
+    }
+  };
+      
       div.appendChild(deleteBtn);
 
       // IMAGE

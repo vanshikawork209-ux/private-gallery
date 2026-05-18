@@ -259,7 +259,6 @@ app.get(
 
 
 // DELETE
-
 app.delete(
 
   "/delete",
@@ -276,6 +275,22 @@ app.delete(
       const resourceType =
         req.query.type ||
         "image";
+
+      // SECURITY CHECK
+
+      if (
+        !publicId.includes(
+          req.user.uid
+        )
+      ) {
+
+        return res.status(403)
+          .json({
+
+            error:
+              "Unauthorized delete"
+          });
+      }
 
       await cloudinary
         .uploader
