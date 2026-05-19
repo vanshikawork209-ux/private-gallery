@@ -211,20 +211,15 @@ app.get(
 
       const result =
 
-        await cloudinary.search
+        await cloudinary.api.resources({
 
-          .expression(
-            `folder="private-gallery/${userId}/${folder}"`
-          )
+          type: "upload",
 
-          .sort_by(
-            "created_at",
-            "desc"
-          )
+          prefix:
+            `private-gallery/${userId}/${folder}`,
 
-          .max_results(100)
-
-          .execute();
+          max_results: 100
+        });
 
       const files =
 
@@ -241,6 +236,8 @@ app.get(
               file.public_id
           })
         );
+
+      console.log(files);
 
       res.json(files);
 
