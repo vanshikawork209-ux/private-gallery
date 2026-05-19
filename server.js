@@ -192,7 +192,6 @@ app.post(
 
 
 // GET FILES
-
 app.get(
   "/files",
   verifyUser,
@@ -200,11 +199,17 @@ app.get(
 
     try {
 
+      const userId =
+        req.user.uid;
+
       const result =
         await cloudinary.api.resources({
 
           type: "upload",
-          prefix: "private-gallery/",
+
+          prefix:
+            `private-gallery/${userId}`,
+
           max_results: 100
         });
 
@@ -230,6 +235,7 @@ app.get(
       console.log(err);
 
       res.status(500).json({
+
         error:
           "Cannot fetch files"
       });
@@ -255,11 +261,11 @@ app.delete(
         req.query.type ||
         "image";
 
-      // SECURITY CHECK
+      // USER SECURITY
 
       if (
-        !publicId.includes(
-          req.user.uid
+        !publicId.startsWith(
+          `private-gallery/${req.user.uid}`
         )
       ) {
 
@@ -300,7 +306,6 @@ app.delete(
     }
   }
 );
-
 
 // START SERVER
 
