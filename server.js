@@ -1,278 +1,323 @@
-   import {
-  getAuth,
-  onAuthStateChanged
-} from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+require("dotenv").config();
 
-const auth =
-  getAuth();
+const express =
+  require("express");
 
-const fileInput =
-  document.getElementById(
-    "fileInput"
+const multer =
+  require("multer");
+
+const cloudinary =
+  require("cloudinary").v2;
+
+const admin =
+  require("firebase-admin");
+
+const {
+  CloudinaryStorage
+} = require(
+  "multer-storage-cloudinary"
+);
+
+const path =
+  require("path");
+
+const app =
+  express();
+
+
+// FIREBASE ADMIN
+
+admin.initializeApp({
+
+  credential:
+    admin.credential.cert({
+
+      projectId:
+        process.env.FIREBASE_PROJECT_ID,
+
+      clientEmail:
+        process.env.FIREBASE_CLIENT_EMAIL,
+
+      privateKey:
+        process.env
+          .FIREBASE_PRIVATE_KEY
+          .replace(/\\n/g, "\n")
+    })
+});
+
+
+// CLOUDINARY CONFIG
+
+cloudinary.config({
+
+  cloud_name:
+    process.env.CLOUD_NAME,
+
+  api_key:
+    process.env.API_KEY,
+
+  api_secret:
+    process.env.API_SECRET
+});
+
+
+// VERIFY USER
+
+async function verifyUser(
+  req,
+  res,
+  next
+) {
+
+  try {
+
+    const token =
+      req.headers.authorization
+        ?.split("Bearer ")[1];
+
+    if (!token) {
+
+      return res.status(401)
+        .json({
+
+          error:
+            "No token"
+        });
+    }
+
+    const decodedToken =
+      await admin.auth()
+        .verifyIdToken(token);
+
+    req.user =
+      decodedToken;
+
+    next();
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(401).json({
+
+      error:
+        "Unauthorized"
+    });
+  }
+}
+
+
+// STORAGE
+   const storage =
+        new CloudinaryStorage({
+
+    cloudinary,
+
+    params: async (
+      req,
+      file
+    ) => {
+
+      return {
+
+        folder:
+          `private-gallery/${req.user.uid}`,
+
+        resource_type:
+          "auto"
+      };
+    }
+  });
+
+const upload =
+  multer({
+    storage
+  });    
+        
+
+
+
+// MIDDLEWARE
+
+app.use(express.json());
+
+app.use(express.urlencoded({
+  extended: true
+}));
+
+app.use(express.static("public"));
+
+
+// HOME
+
+app.get("/", (req, res) => {
+
+  res.sendFile(
+
+    path.join(
+      __dirname,
+      "public",
+      "index.html"
+    )
   );
-
-const gallery =
-  document.getElementById(
-    "gallery"
-  );
+});
 
 
-// FILE SELECT
+// UPLOAD
 
-fileInput.addEventListener(
+app.post(
 
-  "change",
+  "/upload",
 
-  async () => {
+  verifyUser,
 
-    const file =
-      fileInput.files[0];
+  upload.single("file"),
 
-    if (!file) return;
+  (req, res) => {
 
-    await uploadFile(file);
+    console.log(
+      "UPLOAD SUCCESS"
+    );
 
-    fileInput.value = "";
+    console.log(req.file);
+
+    res.json({
+
+      success: true,
+
+      file: req.file
+    });
   }
 );
 
 
-// UPLOAD FUNCTION
+// GET FILES
 
-async function uploadFile(file) {
+app.get(
+  "/files",
+  verifyUser,
+  async (req, res) => {
 
-  if (!auth.currentUser) {
+    try {
 
-    console.log(
-      "Login required"
-    );
+      const result =
+        await cloudinary.api.resources({
 
-    return;
-  }
+          type: "upload",
+          prefix: "private-gallery/",
+          max_results: 100
+        });
 
-  const formData =
-    new FormData();
+      const files =
+        result.resources.map(
+          file => ({
 
-  formData.append(
-    "file",
-    file
-  );
+            url:
+              file.secure_url,
 
-  try {
+            type:
+              file.resource_type,
 
-    const token =
-      await auth.currentUser
-      .getIdToken();
+            public_id:
+              file.public_id
+          })
+        );
 
-    const response =
-      await fetch("/upload", {
+      res.json(files);
 
-        method:
-          "POST",
+    } catch (err) {
 
-        headers: {
+      console.log(err);
 
-          Authorization:
-            `Bearer ${token}`
-        },
-
-        body:
-          formData
+      res.status(500).json({
+        error:
+          "Cannot fetch files"
       });
-
-    const data =
-      await response.json();
-
-    console.log(data);
-
-    await loadGallery();
-
-  } catch (error) {
-
-    console.log(
-      "Upload Error:",
-      error
-    );
-  }
-}
-
-
-// LOAD GALLERY
-
-async function loadGallery() {
-
-  try {
-
-    if (!auth.currentUser)
-      return;
-
-    const token =
-      await auth.currentUser
-      .getIdToken();
-
-    const res =
-      await fetch(
-
-        "/files",
-
-        {
-
-          headers: {
-
-            Authorization:
-              `Bearer ${token}`
-          }
-        }
-      );
-
-    const files =
-      await res.json();
-
-    gallery.innerHTML =
-      "";
-
-    if (!files.length) {
-
-      gallery.innerHTML =
-        "<p>No files uploaded yet.</p>";
-
-      return;
     }
+  }
+);
 
-    files.forEach(file => {
+// DELETE
+app.delete(
 
-      const div =
-        document.createElement(
-          "div"
-        );
+  "/delete",
 
-      div.className =
-        "gallery-item";
+  verifyUser,
 
-      // DELETE BUTTON
+  async (req, res) => {
 
-      const deleteBtn =
-        document.createElement(
-          "button"
-        );
+    try {
 
-      deleteBtn.innerText =
-        "Delete";
+      const publicId =
+        req.query.public_id;
 
-      deleteBtn.className =
-        "delete-btn";
+      const resourceType =
+        req.query.type ||
+        "image";
 
-      deleteBtn.onclick =
-        async () => {
-
-          try {
-
-            const token =
-              await auth.currentUser
-              .getIdToken();
-
-            await fetch(
-
-              `/delete?public_id=${encodeURIComponent(file.public_id)}&type=${file.type}`,
-
-              {
-
-                method:
-                  "DELETE",
-
-                headers: {
-
-                  Authorization:
-                    `Bearer ${token}`
-                }
-              }
-            );
-
-            await loadGallery();
-
-          } catch (error) {
-
-            console.log(error);
-          }
-        };
-
-      div.appendChild(
-        deleteBtn
-      );
-
-      // IMAGE
+      // SECURITY CHECK
 
       if (
-        file.type === "image"
+        !publicId.includes(
+          req.user.uid
+        )
       ) {
 
-        const img =
-          document.createElement(
-            "img"
-          );
+        return res.status(403)
+          .json({
 
-        img.src =
-          file.url;
-
-        img.style.width =
-          "200px";
-
-        div.appendChild(img);
+            error:
+              "Unauthorized delete"
+          });
       }
 
-      // VIDEO
+      await cloudinary
+        .uploader
+        .destroy(
 
-      else if (
-        file.type === "video"
-      ) {
+          publicId,
 
-        const video =
-          document.createElement(
-            "video"
-          );
+          {
+            resource_type:
+              resourceType
+          }
+        );
 
-        video.src =
-          file.url;
+      res.json({
 
-        video.controls =
-          true;
+        success: true
+      });
 
-        video.style.width =
-          "200px";
+    } catch (err) {
 
-        div.appendChild(video);
-      }
+      console.log(err);
 
-      gallery.appendChild(div);
-    });
+      res.status(500).json({
 
-  } catch (error) {
+        error:
+          "Delete failed"
+      });
+    }
+  }
+);
+
+
+// START SERVER
+
+const PORT =
+  process.env.PORT || 3000;
+
+app.listen(
+
+  PORT,
+
+  "0.0.0.0",
+
+  () => {
 
     console.log(
-      "Gallery Error:",
-      error
+
+      `Server running on port ${PORT}`
     );
-  }
-}
-
-
-// LOGIN STATE
-
-onAuthStateChanged(
-
-  auth,
-
-  (user) => {
-
-    if (user) {
-
-      loadGallery();
-
-    } else {
-
-      gallery.innerHTML =
-        "";
-    }
   }
 );

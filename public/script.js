@@ -1,22 +1,34 @@
-import {
+ import {
   getAuth,
   onAuthStateChanged
 } from
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const auth = getAuth();
+const auth =
+  getAuth();
 
 const fileInput =
-  document.getElementById("fileInput");
+  document.getElementById(
+    "fileInput"
+  );
 
 const gallery =
-  document.getElementById("gallery");
+  document.getElementById(
+    "gallery"
+  );
+
+const folderSelect =
+  document.getElementById(
+    "folderSelect"
+  );
 
 
 // FILE SELECT
 
 fileInput.addEventListener(
+
   "change",
+
   async () => {
 
     const file =
@@ -25,8 +37,6 @@ fileInput.addEventListener(
     if (!file) return;
 
     await uploadFile(file);
-
-    fileInput.value = "";
   }
 );
 
@@ -35,35 +45,35 @@ fileInput.addEventListener(
 
 async function uploadFile(file) {
 
-  // LOGIN CHECK
-
-  if (!auth.currentUser) {
-
-    console.log("Please login first");
-
-    return;
-  }
-
-  const formData =
-    new FormData();
-
-  // FILE
-
-  formData.append(
-    "file",
-    file
-  );
-
-  // FOLDER
-
-  formData.append(
-    "folder",
-    document.getElementById(
-      "folderSelect"
-    ).value
-  );
-
   try {
+
+    // LOGIN CHECK
+
+    if (!auth.currentUser) {
+
+      console.log(
+        "Please login first"
+      );
+
+      return;
+    }
+
+    const formData =
+      new FormData();
+
+    // FILE
+
+    formData.append(
+      "file",
+      file
+    );
+
+    // FOLDER
+
+    formData.append(
+      "folder",
+      folderSelect.value
+    );
 
     // TOKEN
 
@@ -74,27 +84,28 @@ async function uploadFile(file) {
     const response =
       await fetch("/upload", {
 
-        method: "POST",
+        method:
+          "POST",
 
         headers: {
+
           Authorization:
             `Bearer ${token}`
         },
 
-        body: formData
+        body:
+          formData
       });
 
     const data =
       await response.json();
 
-    // ERROR CHECK
+    console.log(data);
 
-    if (!response.ok) {
+    // CLEAR INPUT
 
-      console.log(data);
-
-      return;
-    }
+    fileInput.value =
+      "";
 
     // RELOAD GALLERY
 
@@ -119,22 +130,23 @@ async function loadGallery() {
     // LOGIN CHECK
 
     if (!auth.currentUser) {
+
+      gallery.innerHTML =
+        "";
+
       return;
     }
+
+    // TOKEN
 
     const token =
       await auth.currentUser
       .getIdToken();
 
-    const folder =
-      document.getElementById(
-        "folderSelect"
-      ).value;
-
-    const res =
+    const response =
       await fetch(
 
-        `/files?folder=${folder}`,
+        "/files",
 
         {
 
@@ -147,9 +159,14 @@ async function loadGallery() {
       );
 
     const files =
-      await res.json();
+      await response.json();
 
-    gallery.innerHTML = "";
+    console.log(files);
+
+    // CLEAR GALLERY
+
+    gallery.innerHTML =
+      "";
 
     // NO FILES
 
@@ -161,10 +178,14 @@ async function loadGallery() {
       return;
     }
 
+    // SHOW FILES
+
     files.forEach(file => {
 
       const div =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
 
       div.className =
         "gallery-item";
@@ -172,77 +193,93 @@ async function loadGallery() {
       // DELETE BUTTON
 
       const deleteBtn =
-        document.createElement("button");
+        document.createElement(
+          "button"
+        );
 
       deleteBtn.innerText =
         "Delete";
 
       deleteBtn.className =
         "delete-btn";
-deleteBtn.onclick =
-  async () => {
 
-    const confirmDelete =
-      confirm(
-        "Delete this file?"
-      );
+      deleteBtn.onclick =
+        async () => {
 
-    if (!confirmDelete)
-      return;
+          try {
 
-    try {
+            const confirmDelete =
+              confirm(
+                "Delete this file?"
+              );
 
-      const token =
-        await auth.currentUser
-        .getIdToken();
+            if (!confirmDelete)
+              return;
 
-      const response =
-        await fetch(
+            const token =
+              await auth.currentUser
+              .getIdToken();
 
-          `/delete?public_id=${encodeURIComponent(file.public_id)}&type=${file.type}`,
+            await fetch(
 
-          {
+              `/delete?public_id=${encodeURIComponent(file.public_id)}&type=${file.type}`,
 
-            method: "DELETE",
+              {
 
-            headers: {
+                method:
+                  "DELETE",
 
-              Authorization:
-                `Bearer ${token}`
-            }
+                headers: {
+
+                  Authorization:
+                    `Bearer ${token}`
+                }
+              }
+            );
+
+            await loadGallery();
+
+          } catch (error) {
+
+            console.log(
+              "Delete Error:",
+              error
+            );
           }
-        );
+        };
 
-      const data =
-        await response.json();
-
-      console.log(data);
-
-      await loadGallery();
-
-    } catch (error) {
-
-      console.log(error);
-    }
-  };
-      
-      div.appendChild(deleteBtn);
+      div.appendChild(
+        deleteBtn
+      );
 
       // IMAGE
 
-      if (file.type === "image") {
+      if (
+        file.type === "image"
+      ) {
 
         const img =
-          document.createElement("img");
+          document.createElement(
+            "img"
+          );
 
         img.src =
           file.url;
 
         img.style.width =
-          "200px";
+          "250px";
+
+        img.style.height =
+          "250px";
+
+        img.style.objectFit =
+          "cover";
 
         img.style.borderRadius =
-          "10px";
+          "12px";
+
+        img.style.display =
+          "block";
 
         div.appendChild(img);
       }
@@ -254,7 +291,9 @@ deleteBtn.onclick =
       ) {
 
         const video =
-          document.createElement("video");
+          document.createElement(
+            "video"
+          );
 
         video.src =
           file.url;
@@ -263,7 +302,10 @@ deleteBtn.onclick =
           true;
 
         video.style.width =
-          "200px";
+          "250px";
+
+        video.style.borderRadius =
+          "12px";
 
         div.appendChild(video);
       }
@@ -283,24 +325,34 @@ deleteBtn.onclick =
 
 // FOLDER CHANGE
 
-document.getElementById(
-  "folderSelect"
-).addEventListener(
+folderSelect.addEventListener(
+
   "change",
+
   loadGallery
 );
 
 
-// WAIT FOR LOGIN
+// AUTH STATE
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(
 
-  if (user) {
+  auth,
 
-    loadGallery();
+  (user) => {
 
-  } else {
+    if (user) {
 
-    gallery.innerHTML = "";
+      console.log(
+        "User logged in"
+      );
+
+      loadGallery();
+
+    } else {
+
+      gallery.innerHTML =
+        "";
+    }
   }
-});
+);
